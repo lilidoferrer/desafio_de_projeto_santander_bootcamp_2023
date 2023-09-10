@@ -1,0 +1,68 @@
+# Para executar essa aplicação foi utilizada ferramenta google Colab
+# Para entender cada linha de codigo, leia README.md
+
+# Indicando de onde serão tiradas/carregadas as informações dis cliente (endereço do banco de dados)
+sdw_url = 'https://sdw-2023-prd.up.railway.app'
+
+#importando as informações do arquivo que conterá as ids dos clientes
+import pandas as pd
+df = pd.read_csv('sdw2023.csv')
+user_ids = df['UserID'].tolist()
+print(user_ids)
+
+#importando informações dos clientes do banco de dados
+from IPython.utils.text import indent
+import requests
+import json
+
+def get_user(id):
+  response = requests.get(f'{sdw_url}/users/{id}')
+  return response.json() if response.status_code == 200 else None
+
+users = [user for id in user_ids if(user := get_user(id)) is not None]
+print(json.dumps(users , indent=2))
+
+#instalando biblioteca openai
+!pip install openai
+
+# inserindo chave de acesso ao Chat-GPT
+openai_api_key = 'KEY_CHAT.GPT'
+
+#Criando a comunicação com o Chat-GPT através do Python
+import os
+import openai
+
+openai.api_key = openai_api_key
+
+def generate_ia_news(user):
+  completion = openai.ChatCompletion.create(
+      model="gpt-3.5-turbo",
+      messages=[
+          {"role": "system", "content": "Ola! Voce é um especialista em marketing bancario!"},
+          {"role": "user", "content": f"Voce poderia criar uma mensagem para  {user['name']} sobre a importancia dos investimentos (no maximo 100 caracteres), lembrando a ele que ele possui {user['account']} de limite "},
+
+          ]
+      )
+  return completion.choices[0].message.content.strip('\n"')
+
+for  user in users:
+  news = generate_ia_news(user)
+  print(news)
+  user['news'].append({
+      "icon": "https://digitalinnovationone.github.io/santander-dev-week-2023-api/icons/credit.svg",
+      "description": news
+
+  })
+
+
+#Atualizando as informações do usuario com as mensagens geradas pelo CHat-GPT
+
+def updade_user(user):
+    response = requests.put(f"{sdw_url}/users/{user['id']}", json=user)
+    return True if response.status_code == 200 else False
+
+for user in  users:
+  sucess = updade_user(user)
+  print(f"User {user['name']} atualizado? {sucess}!")
+
+
