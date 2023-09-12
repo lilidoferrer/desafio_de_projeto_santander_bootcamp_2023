@@ -25,9 +25,9 @@ Vocês já mergulharam a fundo no mundo da Ciência de Dados conosco! Juntos, co
 3º Definir as informações do usuario (principalmente nome, conta, cartão e limite) e depois clicar em [Execute]
 
 ## Criar Arquivo [sdw2023.csv]
-Esse arquivo armazenará a Id dos usuarios que foram criados
+Esse arquivo armazenará as Ids dos usuarios que foram criados, ele poderá ser criado no Bloco de Notas, o importante é salva-lo como ".CSV"
 
-
+![Exemplo do arquivo .CSV](https://github.com/lilidoferrer/desafio_de_projeto_santander_bootcamp_2023/blob/main/img1.png)
 
 ## Programação
 Para fazer a implementação a ferramenta utilizada é o Colab.
