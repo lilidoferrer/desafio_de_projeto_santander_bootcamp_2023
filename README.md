@@ -32,31 +32,83 @@ Esse arquivo armazenará as Ids dos usuarios que foram criados, ele poderá ser 
 ## Programação
 Para fazer a implementação a ferramenta utilizada é o Colab.
 
+1º Indicar endereço da API do Swagger
 ```bash
-pip install foobar
+sdw_url = 'https://sdw-2023-prd.up.railway.app'
 ```
 
-## Usage
-
-```python
-import foobar
-
-# returns 'words'
-foobar.pluralize('word')
-
-# returns 'geese'
-foobar.pluralize('goose')
-
-# returns 'phenomenon'
-foobar.singularize('phenomena')
+2º Impostar ids dos clientes do arquivo ".CSV"
+import pandas as pd
+```bash
+df = pd.read_csv('sdw2023.csv')
+user_ids = df['UserID'].tolist()
+print(user_ids)
 ```
 
-## Contributing
+3º Buscar as informações dos clientes (baseado nas ids do arquivo CSV), na api do Swagger
+```bash
+from IPython.utils.text import indent
+import requests
+import json
 
-Pull requests are welcome. For major changes, please open an issue first
-to discuss what you would like to change.
+def get_user(id):
+  response = requests.get(f'{sdw_url}/users/{id}')
+  return response.json() if response.status_code == 200 else None
 
-Please make sure to update tests as appropriate.
+users = [user for id in user_ids if(user := get_user(id)) is not None]
+print(json.dumps(users , indent=2))
+```
+4º Instalar a biblioteca openai
+```bash
+!pip install openai
+```
+5º Autenticar o uso do chat-GPT, atraves da chave de autenticação
+```bash
+openai_api_key = 'SUA-CHAVE'
+```
+
+6º Criar a "comunicação" entre o Chat_GPT e o programa desenvolvido
+```bash
+import os
+import openai
+
+# Load your API key from an environment variable or secret management service
+openai.api_key = openai_api_key
+
+def generate_ia_news(user):
+  completion = openai.ChatCompletion.create(
+      model="gpt-3.5-turbo",
+      messages=[
+          {"role": "system", "content": "Ola! Voce é um especialista em marketing bancario!"},
+          {"role": "user", "content": f"Voce poderia criar uma mensagem para  {user['name']} sobre a importancia dos investimentos (no maximo 100 caracteres), lembrando a ele que ele possui {user['account']} de limite "},
+
+          ]
+      )
+  return completion.choices[0].message.content.strip('\n"')
+
+for  user in users:
+  news = generate_ia_news(user)
+  print(news)
+  user['news'].append({
+      "icon": "https://digitalinnovationone.github.io/santander-dev-week-2023-api/icons/credit.svg",
+      "description": news
+
+  })
+```
+
+7º Salvar as mensagens criadas, na api Swagger
+
+```bash
+def updade_user(user):
+    response = requests.put(f"{sdw_url}/users/{user['id']}", json=user)
+    return True if response.status_code == 200 else False
+
+for user in  users:
+  sucess = updade_user(user)
+  print(f"User {user['name']} atualizado? {sucess}!")
+```
+
+
 
 
 
